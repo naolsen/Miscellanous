@@ -26,9 +26,9 @@
 #' lm.D9 <- lm(weight ~ group)
 #' 
 #' 
-#' plot(lm.D9) ## Residual plots for data
+#' plot(lm.D9) ## Residual plots for observed data
 #' 
-#' resplot(lm.D9) ##
+#' rescompplot(lm.D9) ## Comparison diagnostics
 #' 
 rescompplot <- function(L, main = "Comparison validation plot", ...) {
   if (class(L) != "lm") stop("L must be a linear model output fitted!")
