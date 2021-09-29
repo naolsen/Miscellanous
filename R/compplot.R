@@ -1,19 +1,16 @@
 
 
-
-
 #' Residual comparison plots
-#' 
-#' @description Replace residuals with random values and show diagnostics plots. 
 #'
-#' @param L Output from \code{lm}
-#' @param main Plot title (passed to plot.lm)
+#' @param L Output from \code{lm} or \code{glm}
+#' @param main Plot title (passed to \code{plot.lm})
 #' @param ... Optional parameters to be passed to \code{plot.lm}
-#' 
-#' @details It is well-known that residuals are not i.i.d. nomrally distributed. This is an issue when doing model validation.
-#' This function simulates values based on an fit from \code{lm}, fits model to new values and returns diagnosics plot.
-#' Used for comparing observed diagnostics with 'true' diagnostics. 
 #'
+#' @details It is well-known that residuals are not i.i.d. normally distributed. 
+#' This is often an issue when doing model validation because we are told to look for i.i.d. normality.
+#' 
+#' Using \code{simulate}, this function simulates values based on the model fit, fits model to new values and returns diagnosics plot.
+#' @return
 #' @export
 #'
 #' @examples
@@ -25,25 +22,38 @@
 #' weight <- c(ctl, trt)
 #' lm.D9 <- lm(weight ~ group)
 #' 
+#' par(mfrow = c(2,2))
+#' plot(lm.D9) ## Residual plot for data
 #' 
-#' plot(lm.D9) ## Residual plots for observed data
+#' rescompplot(lm.D9) ## Comparison plot for simulated data
 #' 
-#' rescompplot(lm.D9) ## Comparison diagnostics
+#' 
+#' ## Poisson regression fitted to the Covid-19 death toll in the United States 
+#' in the initial stage of the pandemic
+#'
+#' ## Daily count of fatalities in the United States, March 7 - March 22. 
+#' usa.deaths <- c(1, 3, 4, 5, 7, 4, 7, 7, 6, 13, 21, 26, 52, 55, 65, 106)
+#' times <- 7:22 ## Day numbers
+#' 
+#' Lp <- glm(usa.deaths ~ times, family = poisson)
+#' 
+#' par(mfrow = c(2,2))
+#' ## Residual plot
+#' plot(Lp) 
+#' 
+#' ## Comparison plot for simulated data
+#' rescompplot(Lp)
 #' 
 rescompplot <- function(L, main = "Comparison validation plot", ...) {
-  if (class(L) != "lm") stop("L must be a linear model output fitted!")
-  if (is.null(L$model)) stop("L must be fitted with model = TRUE")
+  if (!inherits(L, 'lm')) stop("L must be a glm/lm output!")
   
-  .newdata <- rnorm(n = length(L$residuals), mean = fitted(L), sd = sqrt(sum(L$residuals^2) / L$df.residual))
+  data <- L$model
+  data[[1]] <- simulate(L, nsim = 1)[[1]]
   
   r <- L$call
-  r$formula[[2]] <- quote(.newdata) # replace variable
-  r$data <- NULL # just in case
-  
-  L.ny <- eval(r, envir = L$model)
+  L.ny <- eval(r, envir = data)
   plot(L.ny, main = main, ...)
 }
-
 
 
 
